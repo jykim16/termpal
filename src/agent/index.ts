@@ -13,7 +13,7 @@ export async function getAgentResponse(prompt: string): Promise<string> {
   if (/kubernetes|deploy/i.test(prompt)) {
     script = "#!/bin/bash\nkubectl apply -f manifest.yaml";
     response = "Generated script to deploy manifest.yaml to Kubernetes.";
-  } else if (/git.*branch/i.test(prompt)) {
+  } else if (/git/i.test(prompt)) {
     script = `#!/bin/bash
 git pull origin main
 git checkout -b new-branch
