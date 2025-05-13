@@ -7,7 +7,7 @@
 - Install dependencies: `bun install`
 
 ## Run
-bun run src/main.ts
+`bun run src/main.ts`
 
 This will launch a tmux session with three panes:
 - Top left: Prompt (AI agent)
