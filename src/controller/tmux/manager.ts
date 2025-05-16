@@ -1,6 +1,6 @@
 import { spawnSync } from "child_process";
 import os from "os";
-import { Config } from "../../main";
+import { Config } from "../../config";
 
 const sessionName = "termpal";
 const promptPaneCmd = `bun run src/ui/PromptPane/Main.tsx`;

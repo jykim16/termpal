@@ -77,7 +77,7 @@ export class ChatsManager {
 
   getCurrentChat(): Chat | null {
     if (!this.currentChatId) return null;
-    return this.chats.find(chat => chat.id === this.currentChatId) || null;
+    return {...this.chats.find(chat => chat.id === this.currentChatId)} || null;
   }
 
   addMessage(chatId: string, role: 'user' | 'assistant', content: string): void {
