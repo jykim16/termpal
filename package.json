@@ -9,6 +9,7 @@
     "workspace-pane": "bun run src/ui/WorkspacePane.tsx"
   },
   "dependencies": {
+    "@google/genai": "^0.14.0",
     "commander": "^11.1.0",
     "fs-extra": "^11.1.1",
     "ink": "^4.4.1",

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { render, Box, Text, useApp, useInput } from "ink";
 import TextInput from "ink-text-input";
-import { getAgentResponse } from "../../agent/index";
+import { getAgentResponse } from "../../agent";
 import { ChatsManager, Chat } from "../../controller/ChatsManager";
 
 const PromptPane = () => {
@@ -17,26 +17,26 @@ const PromptPane = () => {
     }
   }, []);
 
-  useInput((inputKey, key) => {
-    if (key.return && input.trim()) {
-      if (!currentChat) {
-        const newChat = chatsManager.createNewChat();
-        setCurrentChat(newChat);
-      }
+  let onSubmit = (prompt) => {
+    if (!currentChat) {
+      const newChat = chatsManager.createNewChat();
+      setCurrentChat(newChat);
+    }
 
-      // Add user message
-      chatsManager.addMessage(currentChat!.id, 'user', input);
-      setCurrentChat(chatsManager.getCurrentChat());
+    // Add user message
+    chatsManager.addMessage(currentChat!.id, 'user', prompt);
+    setCurrentChat(chatsManager.getCurrentChat());
 
       // Get and add agent response
-      getAgentResponse(input).then((res) => {
-        chatsManager.addMessage(currentChat!.id, 'assistant', res);
-        setCurrentChat(chatsManager.getCurrentChat());
-      });
+    getAgentResponse(prompt).then((res) => {
+      chatsManager.addMessage(currentChat!.id, 'assistant', res);
+      setCurrentChat(chatsManager.getCurrentChat());
+    });
 
-      setInput("");
-    }
-  });
+    setInput("");
+  };
+
+
 
   return (
     <Box flexDirection="column">
@@ -50,7 +50,7 @@ const PromptPane = () => {
         ))}
       </Box>
       <Text color="green">TermPal Prompt (type your request):</Text>
-      <TextInput value={input} onChange={setInput} />
+      <TextInput value={input} onSubmit={onSubmit}  onChange={setInput}/>
     </Box>
   );
 };

@@ -5,7 +5,12 @@ import path from "path";
 const workflowDir = path.join(os.homedir(), ".termpal", "workflows");
 const workflowFile = path.join(workflowDir, "current.sh");
 
+import {generate} from "./gemini";
+
 export async function getAgentResponse(prompt: string): Promise<string> {
+  let geminiResponse = await generate(prompt)
+  return geminiResponse.text
+
   // Simple rule-based agent for prototype
   let script = "";
   let response = "";
