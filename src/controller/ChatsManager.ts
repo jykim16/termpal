@@ -28,36 +28,57 @@ export class ChatsManager {
   }
 
   private initializeStorage(): void {
-    fs.ensureDirSync(this.storageDir);
+    try {
+      fs.ensureDirSync(this.storageDir);
+    } catch (error) {
+      console.error('CRITICAL: Failed to create chat storage directory:', error);
+      // Depending on the application's needs, this might throw the error further
+      // or the application might try to operate in a degraded mode (e.g., in-memory only).
+      // For now, we log and let it continue, which might lead to failures in other operations.
+    }
   }
 
   private loadChats(): void {
+    let files: string[];
     try {
-      const files = fs.readdirSync(this.storageDir);
-      this.chats = files
-        .filter(file => file.endsWith('.json'))
-        .map(file => {
-          const content = fs.readJsonSync(path.join(this.storageDir, file));
-          return {
+      files = fs.readdirSync(this.storageDir);
+    } catch (error) {
+      console.error('Error reading chat directory:', error);
+      this.chats = [];
+      return;
+    }
+
+    this.chats = files
+      .filter(file => file.endsWith('.json'))
+      .reduce((acc: Chat[], file) => {
+        const filePath = path.join(this.storageDir, file);
+        try {
+          const content = fs.readJsonSync(filePath);
+          acc.push({
             ...content,
             createdAt: new Date(content.createdAt),
             updatedAt: new Date(content.updatedAt),
             messages: content.messages.map((msg: any) => ({
               ...msg,
-              timestamp: new Date(msg.timestamp)
-            }))
-          };
-        })
-        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-    } catch (error) {
-      console.error('Error loading chats:', error);
-      this.chats = [];
-    }
+              timestamp: new Date(msg.timestamp),
+            })),
+          });
+        } catch (error) {
+          console.error(`Error loading chat file ${file}:`, error);
+          // Skip this file and continue with others
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
   private saveChat(chat: Chat): void {
     const filePath = path.join(this.storageDir, `${chat.id}.json`);
-    fs.writeJsonSync(filePath, chat, { spaces: 2 });
+    try {
+      fs.writeJsonSync(filePath, chat, { spaces: 2 });
+    } catch (error) {
+      console.error(`Error saving chat ${chat.id}:`, error);
+    }
   }
 
   createNewChat(): Chat {
@@ -94,9 +115,15 @@ export class ChatsManager {
     chat.updatedAt = new Date();
 
     // Update title if it's the first message
-    if (chat.messages.length === 1) {
+    if (chat.messages.length === 1 && role === 'user') { // Typically set title based on first user message
       chat.title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
     }
+
+    // TODO: Implement message limit if needed
+    // const MAX_MESSAGES_PER_CHAT = 100; // Example limit
+    // if (chat.messages.length > MAX_MESSAGES_PER_CHAT) {
+    //   chat.messages = chat.messages.slice(chat.messages.length - MAX_MESSAGES_PER_CHAT);
+    // }
 
     this.saveChat(chat);
   }
@@ -111,7 +138,11 @@ export class ChatsManager {
 
     this.chats.splice(index, 1);
     const filePath = path.join(this.storageDir, `${chatId}.json`);
-    fs.removeSync(filePath);
+    try {
+      fs.removeSync(filePath);
+    } catch (error) {
+      console.error(`Error deleting chat file ${chatId}.json:`, error);
+    }
 
     if (this.currentChatId === chatId) {
       this.currentChatId = this.chats[0]?.id || null;
